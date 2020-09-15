@@ -22,9 +22,28 @@ function instanceOfNumeral(object: any): object is Numeral {
   return 'input' in object || 'value' in object;
 }
 
-class Numeral {
+export interface IClassHasMetaImplements {
+  clone?: () => any;
+  value?: () => any;
+  input?: () => any;
+  set?: (value: any) => any;
+  add?: (value: any) => any;
+  subtract?: (value: any) => any;
+  multiply?: (value: any) => any;
+  divide?: (value: any) => any;
+}
+
+class Numeral implements IClassHasMetaImplements {
   _input: any;
   _value: number;
+  clone?: () => any;
+  value?: () => any;
+  input?: () => any;
+  set?: (value: any) => any;
+  add?: (value: any) => any;
+  subtract?: (value: any) => any;
+  multiply?: (value: any) => any;
+  divide?: (value: any) => any;
 
   constructor(input: any, number: number) {
     this._input = input;
@@ -280,6 +299,94 @@ numeral._ = _ = {
   includes: function(string: string, search: any) {
     return string.indexOf(search) !== -1;
   },
+  insert: function(string: string, subString: string, start: any) {
+    return string.slice(0, start) + subString + string.slice(start);
+  },
+  reduce: function(array: any[], callback: (value: any, t1: any, k: number, t2: any) => void /*, initialValue*/) {
+    if (this === null) {
+      throw new TypeError('Array.prototype.reduce called on null or undefined');
+    }
+    
+    if (typeof callback !== 'function') {
+      throw new TypeError(callback + ' is not a function');
+    }
+    
+    let t = Object(array),
+      len = t.length >>> 0,
+      k = 0,
+      value;
+
+    if (arguments.length === 3) {
+      value = arguments[2];
+    } else {
+      while (k < len && !(k in t)) {
+        k++;
+      }
+    
+      if (k >= len) {
+        throw new TypeError('Reduce of empty array with no initial value');
+      }
+    
+      value = t[k++];
+    }
+    for (; k < len; k++) {
+      if (k in t) {
+        value = callback(value, t[k], k, t);
+      }
+    }
+    return value;
+  },
+  multiplier: function (x: string) {
+    var parts = x.toString().split('.');
+    return parts.length < 2 ? 1 : Math.pow(10, parts[1].length);
+  },
+  correctionFactor: function () {
+    let args = Array.prototype.slice.call(arguments);
+
+    return args.reduce(function(accum, next) {
+      let mn = numeral._.multiplier(next);
+      return accum > mn ? accum : mn;
+    }, 1);
+  },
+  toFixed: function(
+    value: any,
+    maxDecimals: number,
+    roundingFunction: (value: string) => any,
+    optionals: any
+  ) {
+    let splitValue = value.toString().split("."),
+      minDecimals = maxDecimals - (optionals || 0),
+      boundedPrecision,
+      optionalsRegExp,
+      power,
+      output;
+
+    // Use the smallest precision value possible to avoid errors from floating point representation
+    if (splitValue.length === 2) {
+      boundedPrecision = Math.min(
+        Math.max(splitValue[1].length, minDecimals),
+        maxDecimals
+      );
+    } else {
+      boundedPrecision = minDecimals;
+    }
+
+    power = Math.pow(10, boundedPrecision);
+
+    // Multiply up by precision, round accurately, then divide and use native toFixed():
+    output = (roundingFunction(value + "e+" + boundedPrecision) / power).toFixed(
+      boundedPrecision
+    );
+
+    if (optionals > maxDecimals - boundedPrecision) {
+      optionalsRegExp = new RegExp(
+        "\\.?0{1," + (optionals - (maxDecimals - boundedPrecision)) + "}$"
+      );
+      output = output.replace(optionalsRegExp, "");
+    }
+
+    return output;
+  },
 };
 
 // This function sets the current locale
@@ -311,3 +418,231 @@ numeral.reset = function() {
     options[property] = defaults[property];
   }
 };
+
+numeral.zeroFormat = function(format: any) {
+  options.zeroFormat = typeof(format) === 'string' ? format : null;
+};
+
+numeral.nullFormat = function (format: any) {
+  options.nullFormat = typeof(format) === 'string' ? format : null;
+};
+
+numeral.defaultFormat = function(format: any) {
+  options.defaultFormat = typeof(format) === 'string' ? format : '0.0';
+};
+
+numeral.register = function(type: any, name: string, format: any) {
+  name = name.toLowerCase();
+
+  if (this[type + 's'][name]) {
+    throw new TypeError(name + ' ' + type + ' already registered.');
+  }
+
+  this[type + 's'][name] = format;
+
+  return format;
+};
+
+numeral.validate = function(val: any, culture: any) {
+  let _decimalSep,
+    _thousandSep,
+    _currSymbol,
+    _valArray,
+    _abbrObj,
+    _thousandRegEx,
+    localeData,
+    temp;
+
+  //coerce val to string
+  if (typeof val !== 'string') {
+    val += '';
+
+    if (console.warn) {
+      console.warn('Numeral.js: Value is not string. It has been co-erced to: ', val);
+    }
+  }
+
+  //trim whitespaces from either sides
+  val = val.trim();
+
+  //if val is just digits return true
+  if (!!val.match(/^\d+$/)) {
+    return true;
+  }
+
+  //if val is empty return false
+  if (val === '') {
+    return false;
+  }
+
+  //get the decimal and thousands separator from numeral.localeData
+  try {
+    //check if the culture is understood by numeral. if not, default it to current locale
+    localeData = numeral.localeData(culture);
+  } catch (e) {
+    localeData = numeral.localeData(numeral.locale());
+  }
+
+  //setup the delimiters and currency symbol based on culture/locale
+  _currSymbol = localeData.currency.symbol;
+  _abbrObj = localeData.abbreviations;
+  _decimalSep = localeData.delimiters.decimal;
+  if (localeData.delimiters.thousands === ".") {
+    _thousandSep = "\\.";
+  } else {
+    _thousandSep = localeData.delimiters.thousands;
+  }
+
+   // validating currency symbol
+   temp = val.match(/^[^\d]+/);
+   if (temp !== null) {
+     val = val.substr(1);
+     if (temp[0] !== _currSymbol) {
+       return false;
+     }
+   }
+
+  //validating abbreviation symbol
+  temp = val.match(/[^\d]+$/);
+  if (temp !== null) {
+    val = val.slice(0, -1);
+    if (
+      temp[0] !== _abbrObj.thousand &&
+      temp[0] !== _abbrObj.million &&
+      temp[0] !== _abbrObj.billion &&
+      temp[0] !== _abbrObj.trillion
+    ) {
+      return false;
+    }
+  }
+
+  _thousandRegEx = new RegExp(_thousandSep + '{2}');
+
+  if (!val.match(/[^\d.,]/g)) {
+    _valArray = val.split(_decimalSep);
+    if (_valArray.length > 2) {
+      return false;
+    } else {
+      if (_valArray.length < 2) {
+        return (
+          !!_valArray[0].match(/^\d+.*\d$/) && !_valArray[0].match(_thousandRegEx)
+        );
+      } else {
+        if (_valArray[0].length === 1) {
+          return (
+            !!_valArray[0].match(/^\d+$/) &&
+            !_valArray[0].match(_thousandRegEx) &&
+            !!_valArray[1].match(/^\d+$/)
+          );
+        } else {
+          return (
+            !!_valArray[0].match(/^\d+.*\d$/) &&
+            !_valArray[0].match(_thousandRegEx) &&
+            !!_valArray[1].match(/^\d+$/)
+          );
+        }
+      }
+    }
+  }
+
+  return false;
+}
+
+// TODO
+
+Numeral.prototype.clone = function (): any {
+  return numeral(this);
+};
+
+Numeral.prototype.value = function (): any {
+  return this._value;
+};
+
+Numeral.prototype.input = function (): any {
+  return this._input;
+};
+
+Numeral.prototype.set = function (value: any): any {
+  this._value = Number(value);
+  return this;
+};
+
+Numeral.prototype.add = function(value: any): Numeral {
+  let corrFactor = numeral._.correctionFactor.call(null, this._value, value);
+
+  function cback(accum: number, curr: number, currI: number, O: number) {
+      return accum + Math.round(corrFactor * curr);
+  }
+
+  this._value = numeral._.reduce([this._value, value], cback, 0) / corrFactor;
+
+  return this;
+};
+
+Numeral.prototype.subtract = function(value: any) {
+  var corrFactor = numeral._.correctionFactor.call(null, this._value, value);
+
+  function cback(accum: number, curr: number, currI: number, O: number) {
+    return accum - Math.round(corrFactor * curr);
+  }
+
+  this._value =
+    numeral._.reduce([value], cback, Math.round(this._value * corrFactor)) / corrFactor;
+
+  return this;
+};
+
+Numeral.prototype.multiply = function(value: any) {
+  function cback(accum: number, curr: number, currI: number, O: number) {
+    var corrFactor = numeral._.correctionFactor(accum, curr);
+    return (
+      (Math.round(accum * corrFactor) * Math.round(curr * corrFactor)) /
+      Math.round(corrFactor * corrFactor)
+    );
+  }
+  
+  this._value = numeral._.reduce([this._value, value], cback, 1);
+  
+  return this;
+};
+
+Numeral.prototype.divide = function(value: any) {
+  function cback(accum: number, curr: number, currI: number, O: number) {
+    var corrFactor = numeral._.correctionFactor(accum, curr);
+    return Math.round(accum * corrFactor) / Math.round(curr * corrFactor);
+  }
+  
+  this._value = numeral._.reduce([this._value, value], cback);
+  
+  return this;
+};
+
+numeral.fn = Numeral.prototype;
+
+numeral.register('locale', 'en', {
+  delimiters: {
+    thousands: ',',
+    decimal: '.',
+  },
+  abbreviations: {
+    thousand: 'k',
+    million: 'm',
+    billion: 'b',
+    trillion: 't',
+  },
+  ordinal: function (number: number) {
+    var b = number % 10;
+    return ~~((number % 100) / 10) === 1
+      ? 'th'
+      : b === 1
+      ? 'st'
+      : b === 2
+      ? 'nd'
+      : b === 3
+      ? 'rd'
+      : 'th';
+  },
+  currency: {
+    symbol: '$',
+  },
+});
