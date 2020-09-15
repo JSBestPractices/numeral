@@ -4,10 +4,10 @@ let numeral: any,
   formats: any = {},
   locales: any = {},
   defaults: any = {
-    currentLocale: "en",
+    currentLocale: 'en',
     zeroFormat: null,
     nullFormat: null,
-    defaultFormat: "0,0",
+    defaultFormat: '0,0',
     scalePercentBy100: true,
   },
   options: any = {
@@ -24,6 +24,7 @@ function instanceOfNumeral(object: any): object is Numeral {
 
 export interface IClassHasMetaImplements {
   clone?: () => any;
+  format?: (inputString: string, roundingFunction: (x: number) => number) => any;
   value?: () => any;
   input?: () => any;
   set?: (value: any) => any;
@@ -37,6 +38,7 @@ class Numeral implements IClassHasMetaImplements {
   _input: any;
   _value: number;
   clone?: () => any;
+  format?: (inputString: string, roundingFunction: (x: number) => number) => any;
   value?: () => any;
   input?: () => any;
   set?: (value: any) => any;
@@ -66,12 +68,15 @@ numeral = function(input: any): Numeral {
   } else if (typeof input === 'string') {
     if (options.zeroFormat && input === options.zeroFormat) {
       value = 0;
-    } else if (options.nullFormat && input === options.nullFormat || !input.replace(/[^0-9]+/g, '').length) {
+    } else if (
+      (options.nullFormat && input === options.nullFormat) ||
+      !input.replace(/[^0-9]+/g, '').length
+    ) {
       value = null;
     } else {
       for (kind in formats) {
         regexp =
-          typeof formats[kind].regexps.unformat === "function"
+          typeof formats[kind].regexps.unformat === 'function'
             ? formats[kind].regexps.unformat()
             : formats[kind].regexps.unformat;
         if (regexp && input.match(regexp)) {
@@ -133,82 +138,74 @@ numeral._ = _ = {
       thousands,
       output;
     
-    // make sure we never format a null value
     value = value || 0;
 
     abs = Math.abs(value);
 
-    // see if we should use parentheses for negative number or 
-    // if we should prefix with a sign
-    // if both are present we default to parentheses
-    if (numeral._.includes(format, "(")) {
+    if (numeral._.includes(format, '(')) {
       negP = true;
-      format = format.replace(/[\(|\)]/g, "");
-    } else if (numeral._.includes(format, "+") || numeral._.includes(format, "-")) {
-      signed = numeral._.includes(format, "+")
-        ? format.indexOf("+")
+      format = format.replace(/[\(|\)]/g, '');
+    } else if (numeral._.includes(format, '+') || numeral._.includes(format, '-')) {
+      signed = numeral._.includes(format, '+')
+        ? format.indexOf('+')
         : value < 0
-        ? format.indexOf("-")
+        ? format.indexOf('-')
         : -1;
-      format = format.replace(/[\+|\-]/g, "");
+      format = format.replace(/[\+|\-]/g, '');
     }
 
-    // see if abbreviation is wanted
     if (numeral._.includes(format, 'a')) {
       abbrForce = format.match(/a(k|m|b|t)?/);
 
       abbrForce = abbrForce ? abbrForce[1] : false;
 
-      // check for space before abbreviation
       if (numeral._.includes(format, ' a')) {
         abbr = ' ';
       }
 
       format = format.replace(new RegExp(abbr + 'a[kmbt]?'), '');
 
-      if ((abs >= trillion && !abbrForce) || abbrForce === "t") {
+      if ((abs >= trillion && !abbrForce) || abbrForce === 't') {
         // trillion
         abbr += locale.abbreviations.trillion;
         value = value / trillion;
       } else if (
         (abs < trillion && abs >= billion && !abbrForce) ||
-        abbrForce === "b"
+        abbrForce === 'b'
       ) {
         // billion
         abbr += locale.abbreviations.billion;
         value = value / billion;
       } else if (
         (abs < billion && abs >= million && !abbrForce) ||
-        abbrForce === "m"
+        abbrForce === 'm'
       ) {
         // million
         abbr += locale.abbreviations.million;
         value = value / million;
       } else if (
         (abs < million && abs >= thousand && !abbrForce) ||
-        abbrForce === "k"
+        abbrForce === 'k'
       ) {
         // thousand
         abbr += locale.abbreviations.thousand;
         value = value / thousand;
       }
 
-      // check for optional decimals
       if (numeral._.includes(format, '[.]')) {
         optDec = true;
         format = format.replace('[.]', '.');
       }
 
-      // break number and format
       int = value.toString().split('.')[0];
       precision = format.split('.')[1];
       thousands = format.indexOf(',');
       leadingCount = (format.split('.')[0].split(',')[0].match(/0/g) || []).length;
 
       if (precision) {
-        if (numeral._.includes(precision, "[")) {
-          precision = precision.replace("]", "");
-          precision = precision.split("[");
+        if (numeral._.includes(precision, '[')) {
+          precision = precision.replace(']', '');
+          precision = precision.split('[');
           decimal = numeral._.toFixed(
             value,
             precision[0].length + precision[1].length,
@@ -219,22 +216,21 @@ numeral._ = _ = {
           decimal = numeral._.toFixed(value, precision.length, roundingFunction);
         }
       
-        int = decimal.split(".")[0];
+        int = decimal.split('.')[0];
       
-        if (numeral._.includes(decimal, ".")) {
-          decimal = locale.delimiters.decimal + decimal.split(".")[1];
+        if (numeral._.includes(decimal, '.')) {
+          decimal = locale.delimiters.decimal + decimal.split('.')[1];
         } else {
-          decimal = "";
+          decimal = '';
         }
       
         if (optDec && Number(decimal.slice(1)) === 0) {
-          decimal = "";
+          decimal = '';
         }
       } else {
         int = numeral._.toFixed(value, 0, roundingFunction);
       }
 
-      // check abbreviation again after rounding
       if (
         abbr &&
         !abbrForce &&
@@ -255,38 +251,37 @@ numeral._ = _ = {
         }
       }
 
-      // format number
-      if (numeral._.includes(int, "-")) {
+      if (numeral._.includes(int, '-')) {
         int = int.slice(1);
         neg = true;
       }
 
       if (int.length < leadingCount) {
-        for (var i = leadingCount - int.length; i > 0; i--) {
-          int = "0" + int;
+        for (let i = leadingCount - int.length; i > 0; i--) {
+          int = '0' + int;
         }
       }
 
       if (thousands > -1) {
         int = int
           .toString()
-          .replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1" + locale.delimiters.thousands);
+          .replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1' + locale.delimiters.thousands);
       }
 
-      if (format.indexOf(".") === 0) {
-        int = "";
+      if (format.indexOf('.') === 0) {
+        int = '';
       }
 
-      output = int + decimal + (abbr ? abbr : "");
+      output = int + decimal + (abbr ? abbr : '');
 
       if (negP) {
-        output = (negP && neg ? "(" : "") + output + (negP && neg ? ")" : "");
+        output = (negP && neg ? '(' : '') + output + (negP && neg ? ')' : '');
       } else {
         if (signed >= 0) {
           output =
-            signed === 0 ? (neg ? "-" : "+") + output : output + (neg ? "-" : "+");
+            signed === 0 ? (neg ? '-' : '+') + output : output + (neg ? '-' : '+');
         } else if (neg) {
-          output = "-" + output;
+          output = '-' + output;
         }
       }
 
@@ -294,7 +289,7 @@ numeral._ = _ = {
     }
   },
   isNaN: function (value: any) {
-    return typeof value === "number" && isNaN(value);
+    return typeof value === 'number' && isNaN(value);
   },
   includes: function(string: string, search: any) {
     return string.indexOf(search) !== -1;
@@ -337,7 +332,7 @@ numeral._ = _ = {
     return value;
   },
   multiplier: function (x: string) {
-    var parts = x.toString().split('.');
+    let parts = x.toString().split('.');
     return parts.length < 2 ? 1 : Math.pow(10, parts[1].length);
   },
   correctionFactor: function () {
@@ -354,14 +349,13 @@ numeral._ = _ = {
     roundingFunction: (value: string) => any,
     optionals: any
   ) {
-    let splitValue = value.toString().split("."),
+    let splitValue = value.toString().split('.'),
       minDecimals = maxDecimals - (optionals || 0),
       boundedPrecision,
       optionalsRegExp,
       power,
       output;
 
-    // Use the smallest precision value possible to avoid errors from floating point representation
     if (splitValue.length === 2) {
       boundedPrecision = Math.min(
         Math.max(splitValue[1].length, minDecimals),
@@ -373,25 +367,21 @@ numeral._ = _ = {
 
     power = Math.pow(10, boundedPrecision);
 
-    // Multiply up by precision, round accurately, then divide and use native toFixed():
-    output = (roundingFunction(value + "e+" + boundedPrecision) / power).toFixed(
+    output = (roundingFunction(value + 'e+' + boundedPrecision) / power).toFixed(
       boundedPrecision
     );
 
     if (optionals > maxDecimals - boundedPrecision) {
       optionalsRegExp = new RegExp(
-        "\\.?0{1," + (optionals - (maxDecimals - boundedPrecision)) + "}$"
+        '\\.?0{1,' + (optionals - (maxDecimals - boundedPrecision)) + '}$'
       );
-      output = output.replace(optionalsRegExp, "");
+      output = output.replace(optionalsRegExp, '');
     }
 
     return output;
   },
 };
 
-// This function sets the current locale
-// If no arguments are passed in
-// it will simply return the current global locale key
 numeral.locale = function(key: string) {
   if (key) {
     options.currentLocale = key.toLowerCase();
@@ -399,9 +389,6 @@ numeral.locale = function(key: string) {
   return options.currentLocale;
 };
 
-// This function provides access to the loaded locale data
-// If no arguments are passed in, it will simply return the current
-// global locale object
 numeral.localeData = function(key: string) {
   if (!key) {
     return locales[options.currentLocale];
@@ -414,7 +401,7 @@ numeral.localeData = function(key: string) {
 };
 
 numeral.reset = function() {
-  for (var property in defaults) {
+  for (let property in defaults) {
     options[property] = defaults[property];
   }
 };
@@ -453,7 +440,6 @@ numeral.validate = function(val: any, culture: any) {
     localeData,
     temp;
 
-  //coerce val to string
   if (typeof val !== 'string') {
     val += '';
 
@@ -462,38 +448,31 @@ numeral.validate = function(val: any, culture: any) {
     }
   }
 
-  //trim whitespaces from either sides
   val = val.trim();
 
-  //if val is just digits return true
   if (!!val.match(/^\d+$/)) {
     return true;
   }
 
-  //if val is empty return false
   if (val === '') {
     return false;
   }
 
-  //get the decimal and thousands separator from numeral.localeData
   try {
-    //check if the culture is understood by numeral. if not, default it to current locale
     localeData = numeral.localeData(culture);
   } catch (e) {
     localeData = numeral.localeData(numeral.locale());
   }
 
-  //setup the delimiters and currency symbol based on culture/locale
   _currSymbol = localeData.currency.symbol;
   _abbrObj = localeData.abbreviations;
   _decimalSep = localeData.delimiters.decimal;
-  if (localeData.delimiters.thousands === ".") {
-    _thousandSep = "\\.";
+  if (localeData.delimiters.thousands === '.') {
+    _thousandSep = '\\.';
   } else {
     _thousandSep = localeData.delimiters.thousands;
   }
 
-   // validating currency symbol
    temp = val.match(/^[^\d]+/);
    if (temp !== null) {
      val = val.substr(1);
@@ -502,7 +481,6 @@ numeral.validate = function(val: any, culture: any) {
      }
    }
 
-  //validating abbreviation symbol
   temp = val.match(/[^\d]+$/);
   if (temp !== null) {
     val = val.slice(0, -1);
@@ -548,10 +526,43 @@ numeral.validate = function(val: any, culture: any) {
   return false;
 }
 
-// TODO
-
 Numeral.prototype.clone = function (): any {
   return numeral(this);
+};
+
+Numeral.prototype.format = function (
+  inputString: string,
+  roundingFunction: (x: number) => number
+): any {
+  let value = this._value,
+    format = inputString || options.defaultFormat,
+    kind,
+    output,
+    formatFunction;
+
+  // make sure we have a roundingFunction
+  roundingFunction = roundingFunction || Math.round;
+
+  // format based on value
+  if (value === 0 && options.zeroFormat !== null) {
+    output = options.zeroFormat;
+  } else if (value === null && options.nullFormat !== null) {
+    output = options.nullFormat;
+  } else {
+    for (kind in formats) {
+      if (format.match(formats[kind].regexps.format)) {
+        formatFunction = formats[kind].format;
+
+        break;
+      }
+    }
+
+    formatFunction = formatFunction || numeral._.numberToFormat;
+
+    output = formatFunction(value, format, roundingFunction);
+  }
+
+  return output;
 };
 
 Numeral.prototype.value = function (): any {
@@ -580,7 +591,7 @@ Numeral.prototype.add = function(value: any): Numeral {
 };
 
 Numeral.prototype.subtract = function(value: any) {
-  var corrFactor = numeral._.correctionFactor.call(null, this._value, value);
+  let corrFactor = numeral._.correctionFactor.call(null, this._value, value);
 
   function cback(accum: number, curr: number, currI: number, O: number) {
     return accum - Math.round(corrFactor * curr);
@@ -594,7 +605,7 @@ Numeral.prototype.subtract = function(value: any) {
 
 Numeral.prototype.multiply = function(value: any) {
   function cback(accum: number, curr: number, currI: number, O: number) {
-    var corrFactor = numeral._.correctionFactor(accum, curr);
+    let corrFactor = numeral._.correctionFactor(accum, curr);
     return (
       (Math.round(accum * corrFactor) * Math.round(curr * corrFactor)) /
       Math.round(corrFactor * corrFactor)
@@ -608,7 +619,7 @@ Numeral.prototype.multiply = function(value: any) {
 
 Numeral.prototype.divide = function(value: any) {
   function cback(accum: number, curr: number, currI: number, O: number) {
-    var corrFactor = numeral._.correctionFactor(accum, curr);
+    let corrFactor = numeral._.correctionFactor(accum, curr);
     return Math.round(accum * corrFactor) / Math.round(curr * corrFactor);
   }
   
@@ -631,7 +642,7 @@ numeral.register('locale', 'en', {
     trillion: 't',
   },
   ordinal: function (number: number) {
-    var b = number % 10;
+    let b = number % 10;
     return ~~((number % 100) / 10) === 1
       ? 'th'
       : b === 1
@@ -646,3 +657,5 @@ numeral.register('locale', 'en', {
     symbol: '$',
   },
 });
+
+export default numeral;
