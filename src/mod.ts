@@ -22,7 +22,7 @@ function instanceOfNumeral(object: any): object is Numeral {
   return 'input' in object || 'value' in object;
 }
 
-export interface IClassHasMetaImplements {
+export interface INumeralImplements {
   clone?: () => any;
   format?: (inputString: string, roundingFunction: (x: number) => number) => any;
   value?: () => any;
@@ -32,9 +32,10 @@ export interface IClassHasMetaImplements {
   subtract?: (value: any) => any;
   multiply?: (value: any) => any;
   divide?: (value: any) => any;
+  difference?: (value: any) => any;
 }
 
-class Numeral implements IClassHasMetaImplements {
+class Numeral implements INumeralImplements {
   _input: any;
   _value: number;
   clone?: () => any;
@@ -46,6 +47,7 @@ class Numeral implements IClassHasMetaImplements {
   subtract?: (value: any) => any;
   multiply?: (value: any) => any;
   divide?: (value: any) => any;
+  difference?: (value: any) => any;
 
   constructor(input: any, number: number) {
     this._input = input;
@@ -91,10 +93,6 @@ numeral = function(input: any): Numeral {
     value = Number(input)|| null;
   }
 
-  for (kind in formats) {
-    console.log(kind);
-  }
-
   return new Numeral(input, value);
 }
 
@@ -137,156 +135,215 @@ numeral._ = _ = {
       signed,
       thousands,
       output;
-    
+
     value = value || 0;
 
     abs = Math.abs(value);
 
-    if (numeral._.includes(format, '(')) {
+    if (numeral._.includes(format, "(")) {
       negP = true;
-      format = format.replace(/[\(|\)]/g, '');
-    } else if (numeral._.includes(format, '+') || numeral._.includes(format, '-')) {
-      signed = numeral._.includes(format, '+')
-        ? format.indexOf('+')
+      format = format.replace(/[\(|\)]/g, "");
+    } else if (numeral._.includes(format, "+") || numeral._.includes(format, "-")) {
+      signed = numeral._.includes(format, "+")
+        ? format.indexOf("+")
         : value < 0
-        ? format.indexOf('-')
+        ? format.indexOf("-")
         : -1;
-      format = format.replace(/[\+|\-]/g, '');
+      format = format.replace(/[\+|\-]/g, "");
     }
 
-    if (numeral._.includes(format, 'a')) {
+    if (numeral._.includes(format, "a")) {
       abbrForce = format.match(/a(k|m|b|t)?/);
 
       abbrForce = abbrForce ? abbrForce[1] : false;
 
-      if (numeral._.includes(format, ' a')) {
-        abbr = ' ';
+      if (numeral._.includes(format, " a")) {
+        abbr = " ";
       }
 
-      format = format.replace(new RegExp(abbr + 'a[kmbt]?'), '');
+      format = format.replace(new RegExp(abbr + "a[kmbt]?"), "");
 
-      if ((abs >= trillion && !abbrForce) || abbrForce === 't') {
+      if ((abs >= trillion && !abbrForce) || abbrForce === "t") {
         // trillion
         abbr += locale.abbreviations.trillion;
         value = value / trillion;
       } else if (
         (abs < trillion && abs >= billion && !abbrForce) ||
-        abbrForce === 'b'
+        abbrForce === "b"
       ) {
         // billion
         abbr += locale.abbreviations.billion;
         value = value / billion;
       } else if (
         (abs < billion && abs >= million && !abbrForce) ||
-        abbrForce === 'm'
+        abbrForce === "m"
       ) {
         // million
         abbr += locale.abbreviations.million;
         value = value / million;
       } else if (
         (abs < million && abs >= thousand && !abbrForce) ||
-        abbrForce === 'k'
+        abbrForce === "k"
       ) {
         // thousand
         abbr += locale.abbreviations.thousand;
         value = value / thousand;
       }
-
-      if (numeral._.includes(format, '[.]')) {
-        optDec = true;
-        format = format.replace('[.]', '.');
-      }
-
-      int = value.toString().split('.')[0];
-      precision = format.split('.')[1];
-      thousands = format.indexOf(',');
-      leadingCount = (format.split('.')[0].split(',')[0].match(/0/g) || []).length;
-
-      if (precision) {
-        if (numeral._.includes(precision, '[')) {
-          precision = precision.replace(']', '');
-          precision = precision.split('[');
-          decimal = numeral._.toFixed(
-            value,
-            precision[0].length + precision[1].length,
-            roundingFunction,
-            precision[1].length
-          );
-        } else {
-          decimal = numeral._.toFixed(value, precision.length, roundingFunction);
-        }
-      
-        int = decimal.split('.')[0];
-      
-        if (numeral._.includes(decimal, '.')) {
-          decimal = locale.delimiters.decimal + decimal.split('.')[1];
-        } else {
-          decimal = '';
-        }
-      
-        if (optDec && Number(decimal.slice(1)) === 0) {
-          decimal = '';
-        }
-      } else {
-        int = numeral._.toFixed(value, 0, roundingFunction);
-      }
-
-      if (
-        abbr &&
-        !abbrForce &&
-        Number(int) >= 1000 &&
-        abbr !== locale.abbreviations.trillion
-      ) {
-        int = String(Number(int) / 1000);
-        switch (abbr) {
-          case locale.abbreviations.thousand:
-            abbr = locale.abbreviations.million;
-            break;
-          case locale.abbreviations.million:
-            abbr = locale.abbreviations.billion;
-            break;
-          case locale.abbreviations.billion:
-            abbr = locale.abbreviations.trillion;
-            break;
-        }
-      }
-
-      if (numeral._.includes(int, '-')) {
-        int = int.slice(1);
-        neg = true;
-      }
-
-      if (int.length < leadingCount) {
-        for (let i = leadingCount - int.length; i > 0; i--) {
-          int = '0' + int;
-        }
-      }
-
-      if (thousands > -1) {
-        int = int
-          .toString()
-          .replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1' + locale.delimiters.thousands);
-      }
-
-      if (format.indexOf('.') === 0) {
-        int = '';
-      }
-
-      output = int + decimal + (abbr ? abbr : '');
-
-      if (negP) {
-        output = (negP && neg ? '(' : '') + output + (negP && neg ? ')' : '');
-      } else {
-        if (signed >= 0) {
-          output =
-            signed === 0 ? (neg ? '-' : '+') + output : output + (neg ? '-' : '+');
-        } else if (neg) {
-          output = '-' + output;
-        }
-      }
-
-      return output;
     }
+
+    if (numeral._.includes(format, "[.]")) {
+      optDec = true;
+      format = format.replace("[.]", ".");
+    }
+
+    int = value.toString().split(".")[0];
+    precision = format.split(".")[1];
+    thousands = format.indexOf(",");
+    leadingCount = (format.split(".")[0].split(",")[0].match(/0/g) || []).length;
+
+    if (precision) {
+      if (numeral._.includes(precision, "[")) {
+        precision = precision.replace("]", "");
+        precision = precision.split("[");
+        decimal = numeral._.toFixed(
+          value,
+          precision[0].length + precision[1].length,
+          roundingFunction,
+          precision[1].length
+        );
+      } else {
+        decimal = numeral._.toFixed(value, precision.length, roundingFunction);
+      }
+    
+      int = decimal.split(".")[0];
+    
+      if (numeral._.includes(decimal, ".")) {
+        decimal = locale.delimiters.decimal + decimal.split(".")[1];
+      } else {
+        decimal = "";
+      }
+    
+      if (optDec && Number(decimal.slice(1)) === 0) {
+        decimal = "";
+      }
+    } else {
+      int = numeral._.toFixed(value, 0, roundingFunction);
+    }
+
+    if (
+      abbr &&
+      !abbrForce &&
+      Number(int) >= 1000 &&
+      abbr !== locale.abbreviations.trillion
+    ) {
+      int = String(Number(int) / 1000);
+
+      switch (abbr) {
+        case locale.abbreviations.thousand:
+          abbr = locale.abbreviations.million;
+          break;
+        case locale.abbreviations.million:
+          abbr = locale.abbreviations.billion;
+          break;
+        case locale.abbreviations.billion:
+          abbr = locale.abbreviations.trillion;
+          break;
+      }
+    }
+
+    if (numeral._.includes(int, "-")) {
+      int = int.slice(1);
+      neg = true;
+    }
+
+    if (int.length < leadingCount) {
+      for (var i = leadingCount - int.length; i > 0; i--) {
+        int = "0" + int;
+      }
+    }
+
+    if (thousands > -1) {
+      int = int
+        .toString()
+        .replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1" + locale.delimiters.thousands);
+    }
+
+    if (format.indexOf(".") === 0) {
+      int = "";
+    }
+
+    output = int + decimal + (abbr ? abbr : "");
+
+    if (negP) {
+      output = (negP && neg ? "(" : "") + output + (negP && neg ? ")" : "");
+    } else {
+      if (signed >= 0) {
+        output =
+          signed === 0 ? (neg ? "-" : "+") + output : output + (neg ? "-" : "+");
+      } else if (neg) {
+        output = "-" + output;
+      }
+    }
+
+    return output;
+
+  },
+  stringToNumber: function(string: string) {
+    let locale = locales[options.currentLocale],
+      stringOriginal = string,
+      abbreviations = {
+        thousand: 3,
+        million: 6,
+        billion: 9,
+        trillion: 12,
+      },
+      abbreviation,
+      value,
+      i,
+      regexp;
+
+    if (options.zeroFormat && string === options.zeroFormat) {
+      value = 0;
+    } else if (
+      (options.nullFormat && string === options.nullFormat) ||
+      !string.replace(/[^0-9]+/g, "").length
+    ) {
+      value = null;
+    } else {
+      value = 1;
+    
+      if (locale.delimiters.decimal !== ".") {
+        string = string.replace(/\./g, "").replace(locale.delimiters.decimal, ".");
+      }
+    
+      for (abbreviation in abbreviations) {
+        regexp = new RegExp(
+          "[^a-zA-Z]" +
+            locale.abbreviations[abbreviation] +
+            "(?:\\)|(\\" +
+            locale.currency.symbol +
+            ")?(?:\\))?)?$"
+        );
+    
+        if (stringOriginal.match(regexp)) {
+          value *= Math.pow(10, abbreviations[abbreviation as keyof typeof abbreviations]);
+          break;
+        }
+      }
+    
+      value *=
+        (string.split("-").length +
+          Math.min(string.split("(").length - 1, string.split(")").length - 1)) %
+        2
+          ? 1
+          : -1;
+    
+      string = string.replace(/[^0-9\.]+/g, "");
+    
+      value *= Number(string);
+    }
+    
+    return value;
   },
   isNaN: function (value: any) {
     return typeof value === 'number' && isNaN(value);
@@ -626,6 +683,10 @@ Numeral.prototype.divide = function(value: any) {
   this._value = numeral._.reduce([this._value, value], cback);
   
   return this;
+};
+
+Numeral.prototype.difference = function(value: any) {
+  return Math.abs(numeral(this._value).subtract(value).value());
 };
 
 numeral.fn = Numeral.prototype;
