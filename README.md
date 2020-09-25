@@ -2,6 +2,12 @@
 
 Numeral is a standard Deno module for formatting and manipulating numbers.
 
+## 🔧 How to use
+
+```js
+import { numeral } from 'https://deno.land/x/numeral@v0.1.0/mod.ts';
+```
+
 ## ❗ Issues
 
 If you think any of the `Numeral` can be improved, please do open a PR with any updates and submit any issues. Also, I will continue to improve this, so you might want to watch/star this repository to revisit.

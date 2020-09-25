@@ -1,2 +1,2 @@
 
-import numeral from './src/mod.ts';
+export { numeral } from './src/mod.ts';
