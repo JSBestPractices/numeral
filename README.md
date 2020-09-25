@@ -7,6 +7,23 @@ Numeral is a standard Deno module for formatting and manipulating numbers.
 ```js
 import { numeral } from 'https://deno.land/x/numeral@v0.1.0/mod.ts';
 ```
+## 💡 Usage
+
+### 🎀 Create
+
+Create an instance of a numeral. Numeral takes numbers or strings that it trys to convert into a number.
+
+```js
+let myNumeral = numeral(1000);
+
+let value = myNumeral.value();
+// 1000
+
+let myNumeral2 = numeral('1,000');
+
+let value2 = myNumeral2.value();
+// 1000
+```
 
 ## ❗ Issues
 
