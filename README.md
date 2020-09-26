@@ -92,6 +92,15 @@ const string = numeral(1000).format('0,0');
 | 7884486213    | '0.00b'    | 7.88GB    |
 | 3467479682787 | '0.000 ib' | 3.154 TiB |
 
+#### Percentages
+
+| Number      | Format      | String   |
+|-------------|-------------|----------|
+| 1           | '0%'        | 100%     |
+| 0.974878234 | '0.000%'    | 97.488%  |
+| -0.43       | '0 %'       | -43 %    |
+| 0.43        | '(0.000 %)' | 43.000 % |
+
 ## ❗ Issues
 
 If you think any of the `Numeral` can be improved, please do open a PR with any updates and submit any issues. Also, I will continue to improve this, so you might want to watch/star this repository to revisit.
