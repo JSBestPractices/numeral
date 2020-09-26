@@ -213,6 +213,24 @@ number.format();
 // '$1,000.00'
 ```
 
+#### Custom Zero and Null Formatting
+
+Set a custom output when formatting numerals with a value of 0 or null
+
+```js
+const number = numeral(0);
+const nullNumber = numeral(null);
+
+numeral.zeroFormat('N/A');
+numeral.nullFormat('N/A');
+
+const zero = number.format('0.0')
+// 'N/A'
+
+const na = nullNumber.format('0.0')
+// 'N/A'
+```
+
 ## ❗ Issues
 
 If you think any of the `Numeral` can be improved, please do open a PR with any updates and submit any issues. Also, I will continue to improve this, so you might want to watch/star this repository to revisit.
