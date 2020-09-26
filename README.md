@@ -176,6 +176,25 @@ const difference = number.difference(value);
 // 900
 ```
 
+#### Clone
+
+Go ahead and clone any numeral object while you're at it.
+
+```js
+const a = numeral(1000);
+const b = numeral(a);
+const c = a.clone();
+
+const aVal = a.set(2000).value();
+// 2000
+
+const bVal = b.value();
+// 1000
+
+const cVal = c.add(10).value();
+// 1010
+```
+
 ## ❗ Issues
 
 If you think any of the `Numeral` can be improved, please do open a PR with any updates and submit any issues. Also, I will continue to improve this, so you might want to watch/star this repository to revisit.
