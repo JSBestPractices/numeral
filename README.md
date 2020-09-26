@@ -133,6 +133,24 @@ const value = number.value();
 // 1000
 ```
 
+#### Manipulate
+
+Not that you will use these often, but they're there when you need them.
+
+```js
+const number = numeral(1000);
+
+const added = number.add(10);
+// 1010
+```
+
+| Before | Function       | After  |
+|--------|----------------|--------|
+| 1000   | .add(100)      | 1100   |
+| 1100   | .subtract(100) | 1000   |
+| 1000   | .multiply(100) | 100000 |
+| 100000 | .divide(100)   | 1000   |
+
 ## ❗ Issues
 
 If you think any of the `Numeral` can be improved, please do open a PR with any updates and submit any issues. Also, I will continue to improve this, so you might want to watch/star this repository to revisit.
