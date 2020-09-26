@@ -195,6 +195,24 @@ const cVal = c.add(10).value();
 // 1010
 ```
 
+### 🎀 Settings
+
+#### Default Formatting
+
+Set a default format so you can use .format() without a string. The default format to '0,0'
+
+```js
+const number = numeral(1000);
+
+number.format();
+// '1,000'
+
+numeral.defaultFormat('$0,0.00');
+
+number.format();
+// '$1,000.00'
+```
+
 ## ❗ Issues
 
 If you think any of the `Numeral` can be improved, please do open a PR with any updates and submit any issues. Also, I will continue to improve this, so you might want to watch/star this repository to revisit.
