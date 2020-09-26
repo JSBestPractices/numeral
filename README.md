@@ -109,6 +109,14 @@ const string = numeral(1000).format('0,0');
 | 238    | '00:00:00' | 0:03:58  |
 | 63846  | '00:00:00' | 17:44:06 |
 
+#### Exponential
+
+| Number       | Format     | String   |
+|--------------|------------|----------|
+| 1123456789   | '0,0e+0'   | 1e+9     |
+| 12398734.202 | '0.00e+0'  | 1.24e+7  |
+| 0.000123987  | '0.000e+0' | 1.240e-4 |
+
 ## ❗ Issues
 
 If you think any of the `Numeral` can be improved, please do open a PR with any updates and submit any issues. Also, I will continue to improve this, so you might want to watch/star this repository to revisit.
