@@ -164,6 +164,18 @@ const value = number.value();
 // 1000
 ```
 
+#### Difference
+
+Find the difference between your numeral object and a value
+
+```js
+const number = numeral(1000),
+      value = 100;
+
+const difference = number.difference(value);
+// 900
+```
+
 ## ❗ Issues
 
 If you think any of the `Numeral` can be improved, please do open a PR with any updates and submit any issues. Also, I will continue to improve this, so you might want to watch/star this repository to revisit.
