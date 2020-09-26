@@ -14,14 +14,14 @@ import { numeral } from 'https://deno.land/x/numeral@v0.1.0/mod.ts';
 Create an instance of a numeral. Numeral takes numbers or strings that it trys to convert into a number.
 
 ```js
-let myNumeral = numeral(1000);
+const myNumeral = numeral(1000);
 
-let value = myNumeral.value();
+const value = myNumeral.value();
 // 1000
 
-let myNumeral2 = numeral('1,000');
+const myNumeral2 = numeral('1,000');
 
-let value2 = myNumeral2.value();
+const value2 = myNumeral2.value();
 // 1000
 ```
 
@@ -36,6 +36,39 @@ let value2 = myNumeral2.value();
 | numeral('3.467TB')    | 3467000000000 |
 | numeral('-76%')       | -0.76         |
 | numeral('2:23:57')    | NaN           |
+
+### 🎀 Format
+
+Numbers can be formatted to look like currency, percentages, times, or even plain old numbers with decimal places, thousands, and abbreviations.
+
+```js
+const string = numeral(1000).format('0,0');
+// '1,000'
+```
+
+#### Numbers
+
+| Number     | Format       | String        |
+|------------|--------------|---------------|
+| 10000      | '0,0.0000'   | 10,000.0000   |
+| 10000.23   | '0,0'        | 10,000        |
+| 10000.23   | '+0,0'       | +10,000       |
+| -10000     | '0,0.0'      | -10,000.0     |
+| 10000.1234 | '0.000'      | 10000.123     |
+| 100.1234   | '00000'      | 00100         |
+| 1000.1234  | '000000,0'   | 001,000       |
+| 10         | '000.00'     | 010.00        |
+| 10000.1234 | '0[.]00000'  | 10000.12340   |
+| -10000     | '(0,0.0000)' | (10,000.0000) |
+| -0.23      | '.00'        | -.23          |
+| -0.23      | '(.00)'      | (.23)         |
+| 0.23       | '0.00000'    | 0.23000       |
+| 0.23       | '0.0[0000]'  | 0.23          |
+| 1230974    | '0.0a'       | 1.2m          |
+| 1460       | '0 a'        | 1 k           |
+| -104000    | '0a'         | -104k         |
+| 1          | '0o'         | 1st           |
+| 100        | '0o'         | 100th         |
 
 ## ❗ Issues
 
