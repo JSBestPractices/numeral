@@ -117,6 +117,22 @@ const string = numeral(1000).format('0,0');
 | 12398734.202 | '0.00e+0'  | 1.24e+7  |
 | 0.000123987  | '0.000e+0' | 1.240e-4 |
 
+### 🎀 Functions
+
+#### Value
+
+The value is always available.
+
+```js
+const number = numeral(1000);
+
+const string = number.format('0,0');
+// '1,000'
+
+const value = number.value();
+// 1000
+```
+
 ## ❗ Issues
 
 If you think any of the `Numeral` can be improved, please do open a PR with any updates and submit any issues. Also, I will continue to improve this, so you might want to watch/star this repository to revisit.
