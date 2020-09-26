@@ -70,6 +70,17 @@ const string = numeral(1000).format('0,0');
 | 1          | '0o'         | 1st           |
 | 100        | '0o'         | 100th         |
 
+#### Currency
+
+| Number    | Format       | String     |
+|-----------|--------------|------------|
+| 1000.234  | '$0,0.00'    | $1,000.23  |
+| 1000.2    | '0,0[.]00 $' | 1,000.20 $ |
+| 1001      | '$ 0,0[.]00' | $ 1,001    |
+| -1000.234 | '($0,0)'     | ($1,000)   |
+| -1000.234 | '$0.00'      | -$1000.23  |
+| 1230974   | '($ 0.00 a)' | $ 1.23 m   |
+
 ## ❗ Issues
 
 If you think any of the `Numeral` can be improved, please do open a PR with any updates and submit any issues. Also, I will continue to improve this, so you might want to watch/star this repository to revisit.
