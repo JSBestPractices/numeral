@@ -151,6 +151,19 @@ const added = number.add(10);
 | 1000   | .multiply(100) | 100000 |
 | 100000 | .divide(100)   | 1000   |
 
+#### Set
+
+Set the value of your numeral object.
+
+```js
+const number = numeral();
+
+number.set(1000);
+
+const value = number.value();
+// 1000
+```
+
 ## ❗ Issues
 
 If you think any of the `Numeral` can be improved, please do open a PR with any updates and submit any issues. Also, I will continue to improve this, so you might want to watch/star this repository to revisit.
