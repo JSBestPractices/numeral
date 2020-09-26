@@ -101,6 +101,14 @@ const string = numeral(1000).format('0,0');
 | -0.43       | '0 %'       | -43 %    |
 | 0.43        | '(0.000 %)' | 43.000 % |
 
+#### Time
+
+| Number | Format     | String   |
+|--------|------------|----------|
+| 25     | '00:00:00' | 0:00:25  |
+| 238    | '00:00:00' | 0:03:58  |
+| 63846  | '00:00:00' | 17:44:06 |
+
 ## ❗ Issues
 
 If you think any of the `Numeral` can be improved, please do open a PR with any updates and submit any issues. Also, I will continue to improve this, so you might want to watch/star this repository to revisit.
