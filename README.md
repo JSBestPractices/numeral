@@ -81,6 +81,17 @@ const string = numeral(1000).format('0,0');
 | -1000.234 | '$0.00'      | -$1000.23  |
 | 1230974   | '($ 0.00 a)' | $ 1.23 m   |
 
+#### Bytes
+
+| Number        | Format     | String    |
+|---------------|------------|-----------|
+| 100           | '0b'       | 100B      |
+| 1024          | '0b'       | 1KB       |
+| 2048          | '0 ib'     | 2 KiB     |
+| 3072          | '0.0 b'    | 3.1 KB    |
+| 7884486213    | '0.00b'    | 7.88GB    |
+| 3467479682787 | '0.000 ib' | 3.154 TiB |
+
 ## ❗ Issues
 
 If you think any of the `Numeral` can be improved, please do open a PR with any updates and submit any issues. Also, I will continue to improve this, so you might want to watch/star this repository to revisit.
